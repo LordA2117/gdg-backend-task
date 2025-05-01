@@ -1,16 +1,8 @@
 swagger: "2.0"
 info:
   title: Speaker Booking API
-  description: API for booking sessions with professional speakers
+  description: GDG backend task
   version: "1.0.0"
-  termsOfService: https://example.com/terms/
-  contact:
-    name: API Support
-    url: https://example.com/support
-    email: support@example.com
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
 tags:
   - name: General
     description: General endpoints
