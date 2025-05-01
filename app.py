@@ -68,10 +68,10 @@ with app.app_context():
     db.create_all()
 
 # Add views to the admin panel
-admin = Admin(app, name='Admin Page', template_mode='bootstrap3')
-admin.add_view(ModelView(User, db.session))
-admin.add_view(ModelView(Speaker, db.session))
-admin.add_view(ModelView(Session, db.session))
+# admin = Admin(app, name='Admin Page', template_mode='bootstrap3')
+# admin.add_view(ModelView(User, db.session))
+# admin.add_view(ModelView(Speaker, db.session))
+# admin.add_view(ModelView(Session, db.session))
 
 # Routes
 @app.route('/')
