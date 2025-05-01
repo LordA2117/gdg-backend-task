@@ -4,20 +4,18 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from flask_migrate import Migrate
 from hashlib import sha256
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
 from flask_jwt_extended import JWTManager, get_jwt, get_jwt_identity, jwt_required, create_access_token
 from dotenv import load_dotenv
 from datetime import datetime
 import random
 from flask_mail import Mail, Message
+from flasgger import Swagger
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'abc123')
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite"
-app.config['FLASK_ADMIN_SWATCH'] = 'darkly'
 app.config["JWT_SECRET_KEY"] = os.environ.get('JWT_SECRET_KEY', 'abc123')
 app.config['MAIL_USERNAME'] = os.environ.get('OUTLOOK_EMAIL')
 app.config['MAIL_PASSWORD'] = os.environ.get('OUTLOOK_PASSWORD')
@@ -26,7 +24,7 @@ app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 # Building and designing the database
-# Sorry I didn't get enough time to change the SqlAlchemy settings to Postgres :(
+# Sorry I didn't get enough time to change the Sql db to Postgres :(
 # print(app.config)
 
 class Base(DeclarativeBase):
@@ -37,7 +35,7 @@ db = SQLAlchemy(app, model_class=Base)
 migrate = Migrate(app, db)
 jwt = JWTManager(app)
 mail = Mail(app)
-
+swagger = Swagger(app, template_file='swagger.yaml')
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -67,16 +65,10 @@ class Session(db.Model):
 with app.app_context():
     db.create_all()
 
-# Add views to the admin panel
-# admin = Admin(app, name='Admin Page', template_mode='bootstrap3')
-# admin.add_view(ModelView(User, db.session))
-# admin.add_view(ModelView(Speaker, db.session))
-# admin.add_view(ModelView(Session, db.session))
-
 # Routes
 @app.route('/')
 def home():
-    return jsonify({'message':'Navigate to /api/docs to get started'}),200
+    return jsonify({'message':'Navigate to /apidocs to get started'}),200
 
 @app.route('/api/user/register', methods=['POST'])
 def register_user():
