@@ -194,7 +194,7 @@ def verify_speaker_otp():
             if 'otp' not in data:
                 return jsonify({"error":"Please specify otp"}), 400
             if data['otp'] == otp:
-                additional_claims = {"role":"user"}
+                additional_claims = {"role":"speaker"}
                 access_token = create_access_token(identity=user_profile.username, additional_claims=additional_claims)
                 user_profile.otp = None
                 db.session.commit()
