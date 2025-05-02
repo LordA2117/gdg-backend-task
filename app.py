@@ -17,9 +17,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'abc123')
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite"
 app.config["JWT_SECRET_KEY"] = os.environ.get('JWT_SECRET_KEY', 'abc123')
-app.config['MAIL_USERNAME'] = os.environ.get('OUTLOOK_EMAIL')
-app.config['MAIL_PASSWORD'] = os.environ.get('OUTLOOK_PASSWORD')
-app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_SERVER'] = 'sandbox.smtp.mailtrap.io'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
@@ -140,7 +140,7 @@ def login_speaker():
         speaker = Speaker.query.filter_by(username=data['username']).first()
         if speaker.password != pass_hash:
             return jsonify({"error": "Invalid username or password"}), 401
-        additional_claims = {"role":"speaker"}
+        additional_claims = {"role":"none"}
         access_token = create_access_token(identity=data['username'], additional_claims=additional_claims)
         speaker.otp = random.randint(100000, 999999)
         db.session.commit()
@@ -156,6 +156,32 @@ def verify_user_otp():
     if claims['role'] != 'none':
         return jsonify({"message":"user is already verified"}), 409
     user_profile = User.query.filter_by(username=user_identity).first()
+    otp = user_profile.otp
+    if request.method == 'GET':
+        msg = Message(subject='OTP Verification', sender=app.config['MAIL_USERNAME'], recipients=[user_profile.email])
+        msg.body = f"Your OTP is: {otp}"
+        mail.send(msg)
+        return jsonify({"message":"OTP sent successfully"}), 200
+    if request.method == 'POST':
+        if request.is_json:
+            data = dict(request.get_json())
+            if 'otp' not in data:
+                return jsonify({"error":"Please specify otp"}), 400
+            if data['otp'] == otp:
+                additional_claims = {"role":"user"}
+                access_token = create_access_token(identity=user_profile.username, additional_claims=additional_claims)
+                user_profile.otp = None
+                db.session.commit()
+                return jsonify({"success":True, "access_token":access_token}), 200
+
+@app.route("/api/speaker/verify_otp", methods=['GET','POST'])
+@jwt_required()
+def verify_speaker_otp():
+    user_identity = get_jwt_identity()
+    claims = get_jwt()
+    if claims['role'] != 'none':
+        return jsonify({"message":"user is already verified"}), 409
+    user_profile = Speaker.query.filter_by(username=user_identity).first()
     otp = user_profile.otp
     if request.method == 'GET':
         msg = Message(subject='OTP Verification', sender=app.config['MAIL_USERNAME'], recipients=[user_profile.email])
